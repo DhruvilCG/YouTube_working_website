@@ -3,9 +3,9 @@ import {ApiError} from '../utils/ApiError.js';
 import { User } from '../models/user.model.js';
 import {uploadOnCloudinary} from '../utils/cloudinary.js';
 import {ApiResponse} from '../utils/ApiResponse.js'
-import { response } from 'express';
 
 const registerUser = asyncHandler(async (req , res) => {
+
     //Step 1 : get the details from the user by Frontend
     //Step 2 : validation - not empty, email format, password length
     //Step 3 : check if the user already exists: username , email
@@ -16,19 +16,18 @@ const registerUser = asyncHandler(async (req , res) => {
     //Step 8 : check for user creation
     //Step 9 : return the response
     
-    const {fullName , email , username , password} = req.body;
-    console.log(email) ;
+    const {fullname , email , username , password} = req.body;
 
-    if (fullName == "") {
+    if (fullname === "") {
         throw new ApiError(400 , "Full Name is required");
     }
-    if (email == "") {
+    if (email === "") {
         throw new ApiError(400 , "Email is required");
     }
-    if (username == "") {
+    if (username === "") {
         throw new ApiError(400 , "User Name is required");
     }
-    if (password == "") {
+    if (password === "") {
         throw new ApiError(400 , "Password is required");
     }
     if (email.includes("@") == false) {
@@ -36,7 +35,7 @@ const registerUser = asyncHandler(async (req , res) => {
     }
 
 
-    const existedUser = User.findOne({
+    const existedUser = await User.findOne({
         $or: [{ email } , { username }]
     })
 
@@ -45,21 +44,25 @@ const registerUser = asyncHandler(async (req , res) => {
     }
 
     const avatarLocalPath = req.files?.avatar[0]?.path ;
-    const coverImageLoaclPath = req.fields?.coverImage[0]?.path ; 
-
     if (!avatarLocalPath) {
-        throw new ApiError(400 , "Avatar is required");
-    } 
+        throw new ApiError(400, "Avatar file is required");
+    }
+    
+    let coverImageLocalPath ; 
+    if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
+        coverImageLocalPath = req.files.coverImage[0].path ;
+    }
+
     
     const avatar = await uploadOnCloudinary(avatarLocalPath) ;
-    const coverImage = await uploadOnCloudinary(coverImageLoaclPath) ;
+    const coverImage = await uploadOnCloudinary(coverImageLocalPath) ;
 
     if (!avatar) {
         throw new ApiError(400 , "Avatar is required") ;
     }
 
     const user = await User.create({
-        fullName , 
+        fullname , 
         email , 
         username: username.toLowerCase() , 
         password , 
