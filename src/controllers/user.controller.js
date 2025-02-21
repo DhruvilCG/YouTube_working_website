@@ -320,80 +320,80 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
                 )
             )
     } catch (error) {
-        throw new ApiError (401 , error?.message || "Invalid Refresh Token")
+        throw new ApiError(401, error?.message || "Invalid Refresh Token")
     }
 })
 
-const changeCurrentPassword = asyncHandler( async(req , res) => {
-    const {oldPassword , newPassword} = req.body ;
+const changeCurrentPassword = asyncHandler(async (req, res) => {
+    const { oldPassword, newPassword } = req.body;
 
     // if (newPassword != confPassword) {
     //     throw new ApiError()
     // }
 
-    const user = await User.findById(req.user?._id) ;
+    const user = await User.findById(req.user?._id);
     const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
 
     if (!isPasswordCorrect) {
-        throw new ApiError(400 , "Invalid password")
+        throw new ApiError(400, "Invalid password")
     }
 
     user.password = newPassword
-    await user.save({validateBeforeSave: false})
-    
+    await user.save({ validateBeforeSave: false })
+
     return res
-    .status(200)
-    .json(new ApiResponse(200 , {} , "Password changed successfully"))
+        .status(200)
+        .json(new ApiResponse(200, {}, "Password changed successfully"))
 })
 
-const getCurrentUse = asyncHandler( async(req , res) => {
+const getCurrentUse = asyncHandler(async (req, res) => {
     return res
-    .status(200)
-    .json(200 , res.user, "Current user fetched successfully")
+        .status(200)
+        .json(200, res.user, "Current user fetched successfully")
 })
 
-const updateAccountDetails = asyncHandler( async(req,res) => {
-    const {fullname , email} = req.body
+const updateAccountDetails = asyncHandler(async (req, res) => {
+    const { fullname, email } = req.body
 
     if (!fullname || !email) {
-        throw new ApiError (400 , "All fields are required")
+        throw new ApiError(400, "All fields are required")
     }
 
     const user = User.findByIdAndUpdate(
         req.user?._id,
         {
             $set: {
-                fullname , email
+                fullname, email
             }
         },
-        {new : true}
+        { new: true }
     ).select("-password")
 
     return res
-    .status(200)
-    .json(new ApiResponse (200 , user , "Account details updated successfully"))
+        .status(200)
+        .json(new ApiResponse(200, user, "Account details updated successfully"))
 })
 
-const updateUserAvatar = asyncHandler( async(req , rees) => {
-    const avatarLocalPath = req.file?.path ;
+const updateUserAvatar = asyncHandler(async (req, res) => {
+    const avatarLocalPath = req.file?.path;
 
     if (!avatarLocalPath) {
-        throw new ApiError(400 , "Avatar file is missing")
+        throw new ApiError(400, "Avatar file is missing")
     }
 
     const avatar = await uploadOnCloudinary(avatarLocalPath)
 
     if (!avatar.url) {
-        throw new ApiError(400 , "Error while uploading on avatar")
+        throw new ApiError(400, "Error while uploading on avatar")
     }
 
-    await User.findById(res.user?._id , 
+    await User.findById(res.user?._id,
         {
-            $set : {
-                avatar : avatar.url
+            $set: {
+                avatar: avatar.url
             }
-        }, 
-        {new: true}
+        },
+        { new: true }
     ).select("-password")
 
 })
